@@ -1,2 +1,2 @@
 # Event-System
-Simple event system (using the observer pattern) for C++
+Simple event system (using the observer pattern) for C++ using Fast Delegate from Don Clugston. You can learn more about it in [here](https://www.codeproject.com/Articles/7150/Member-Function-Pointers-and-the-Fastest-Possible)
