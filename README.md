@@ -3,6 +3,7 @@ Simple event system (observer pattern) for C++ using **Fast Delegate** from Don 
 
 # Usage
 You can declare an Event with a similar syntax as an std::function, supporting up to 8 function parameters (limitation by current Fast Delegate code, but it's very easy to extend as you wish).
+You can also define **EVENT_DEBUG_INFO** to debug in console when a subscriber is being created, removed, updated, or ignored in case one with the same id and same instance (for member functions) is already subscribed to the event.
 ```cpp
 class Foo {
     public:
@@ -36,4 +37,4 @@ int main() {
 // This is a member function - 7
 // This is a free function - 7
 ```
-**NOTE:** This system currently only supports *void* as return type since the need to have to return something with events is very small, yet the user still have to type *void* so the user can extend the system to allow return types if they wish (and to keep its syntax similar as a std::function and).
+**NOTE:** This system currently only supports *void* as return type since the need to have to return something with events is very small, yet the user still have to type *void* so the user can extend the system to allow return types if they wish (and to keep its syntax similar as a std::function).
