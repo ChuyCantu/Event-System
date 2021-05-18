@@ -16,17 +16,17 @@ void FreeFunction(int x) {
 }
 
 int main() {
-	// Example of and event for functions that return void and one integer as argument.
-	Event<void(int)> event;
+    // Example of and event for functions that return void and one integer as argument.
+    Event<void(int)> event;
 
- 	event.Subscribe("FreeFunction", FreeFunction);
+    event.Subscribe("FreeFunction", FreeFunction);
     // event.Unsubscribe("FreeFunction");
     Foo foo;
     event.Subscribe("MemberFunction", Foo::MemberFunction, &foo); // Note that you have to tell the event the class where
-    															  // the member function is located, in this case Foo.
+    								  // the member function is located, in this case Foo.
                                                                   // This can be skipped if you're subscribing the function
                                                                   // within the scope of the class that contains it
-	// event.Unsubscribe("MemberFunction", &foo);
+								  // event.Unsubscribe("MemberFunction", &foo);
     
     // Invoking the event
     event.Invoke(7); // You can use the overloaded operator (), as event(7), which will have the same effect.
