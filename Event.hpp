@@ -1,17 +1,15 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
-// #define EVENT_DEBUG_INFO
+#define EVENT_DEBUG_INFO
 
-#include <algorithm>
+#include <functional>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #ifdef EVENT_DEBUG_INFO
 #include <iostream>
 #endif
-#include <unordered_map>
-
-#include "FastDelegate.h"
-
-using namespace fastdelegate;
 
 template <class>
 class EventHandler;
@@ -19,28 +17,26 @@ class EventHandler;
 template <class R, class... Args>
 class EventHandler<R(Args...)> {
    private:
-    using Delegate = FastDelegate<R(Args...)>;
+    using Delegate = std::function<R(Args...)>;
     std::unordered_map<std::string, Delegate> ownedDelegates;
 
    public:
     EventHandler() = default;
 
-    EventHandler(const char* id, Delegate delegate)
+    EventHandler(const std::string& id, Delegate delegate)
         : ownedDelegates{{id, delegate}} {}
 
-    EventHandler(EventHandler&& handler) : 
-        ownedDelegates{std::move(handler.ownedDelegates)} {}
+    EventHandler(EventHandler&& handler) : ownedDelegates{std::move(handler.ownedDelegates)} {}
 
-    EventHandler(const EventHandler& handler) : 
-        ownedDelegates{handler.ownedDelegates} {}
+    EventHandler(const EventHandler& handler) : ownedDelegates{handler.ownedDelegates} {}
 
     ~EventHandler() = default;
 
-    void Add(const char* id, Delegate delegate) {
+    void Add(const std::string& id, Delegate delegate) {
         ownedDelegates.emplace(id, delegate);
     }
 
-    void Remove(const char* id) {
+    void Remove(const std::string& id) {
         ownedDelegates.erase(id);
     }
 
@@ -51,11 +47,26 @@ class EventHandler<R(Args...)> {
     }
 };
 
+//* Utility functions to create std::functions without std::placeholder
+template<class Type, class R, class... Args>
+std::function<R(Args...)> EasyBind(R(Type::*func)(Args... args), Type* invoker) {
+    return [=](auto&&... args) {
+        return (invoker->*func)(std::forward<decltype(args)>(args)...);
+    };
+}
+
+template<class Type, class R, class... Args>
+std::function<R(Args...)> EasyBind(R(Type::*func)(Args... args) const, const Type* invoker) {
+    return [=](auto&&... args) {
+        return (invoker->*func)(std::forward<decltype(args)>(args)...);
+    };
+}
+
 template <class>
 class Event;
 
 /**
- * @brief 
+ * @brief Event that can call all of its subscribers
  * 
  * @tparam R Return type
  * @tparam Args Function arguments
@@ -63,9 +74,10 @@ class Event;
 template <class R, class... Args>
 class Event<R(Args...)> {
    private:
-    using Delegate = FastDelegate<R(Args...)>;
+    using Delegate = std::function<R(Args...)>;
     std::unordered_map<void*, EventHandler<R(Args...)>> listeners;
     std::unordered_map<std::string, Delegate> freeListeners;
+
 
    public:
     Event() = default;
@@ -80,10 +92,11 @@ class Event<R(Args...)> {
      * @param invoker The instance owning the member function
      */
     template <class Invoker, class Type>
-    void Subscribe(const char* id, R (Type::*func)(Args... args), Invoker* invoker) {
-        Delegate deleg{invoker, func};
+    void Subscribe(const std::string& id, R(Type::*func)(Args... args), Invoker* invoker) {
+        // Delegate deleg{invoker, func};
+        Delegate deleg {std::move(EasyBind(func, invoker))};
 
-        auto found{listeners.find(invoker)};
+        auto found{listeners.find(invoker)}; 
 
         if (found != listeners.end()) {
 #ifdef EVENT_DEBUG_INFO
@@ -109,7 +122,7 @@ class Event<R(Args...)> {
      */
     template <class Invoker, class Type>
     void Subscribe(const char* id, R (Type::*func)(Args... args) const, Invoker* invoker) {
-        Delegate deleg{invoker, func};
+        Delegate deleg {std::move(EasyBind(func, invoker))};
 
         auto found{listeners.find(invoker)};
 
@@ -132,12 +145,12 @@ class Event<R(Args...)> {
      * @param id Unique identifier of the subscribing function
      * @param func The function to call when the event is raised
      */
-    void Subscribe(const char* id, R (*func)(Args... args)) {
+    void Subscribe(const std::string& id, R(*func)(Args... args)) {
         Delegate deleg{func};
 
         auto found{freeListeners.find(id)};
 
-        // assert(found == freeListeners.end() 
+        // assert(found == freeListeners.end()
         //     && "Free listener already registered.");
 
         if (found == freeListeners.end()) {
@@ -145,7 +158,7 @@ class Event<R(Args...)> {
             std::cout << "New free listener [" << id << "] added.\n";
 #endif
             freeListeners.emplace(id, deleg);
-        } 
+        }
 #ifdef EVENT_DEBUG_INFO
         else {
             std::cout << "Free listener [" << id << "] already registered.\n";
@@ -161,7 +174,7 @@ class Event<R(Args...)> {
      * @param invoker The instance owning the member function
      */
     template <class Invoker>
-    void Unsubscribe(const char* id, Invoker* invoker) {
+    void Unsubscribe(const std::string& id, Invoker* invoker) {
         try {
 #ifdef EVENT_DEBUG_INFO
             std::cout << "Removing " << id << "...\n";
@@ -185,13 +198,18 @@ class Event<R(Args...)> {
         freeListeners.erase(id);
     }
 
+    /**
+     * @brief Unsubscribes all functions owned by the invoker instance from this event
+     * 
+     * @param invoker Instance subscribed to this event
+     */
     template <class Invoker>
     void RemoveListener(Invoker* invoker) {
         listeners.erase(invoker);
     }
 
     /**
-     * @brief 
+     * @brief Calls all subscribed functions 
      * 
      * @param args 
      */
@@ -205,7 +223,7 @@ class Event<R(Args...)> {
     }
 
     /**
-     * @brief 
+     * @brief Calls all subscribed functions (this is equivalent to Invoke())
      * 
      * @param args 
      */
@@ -213,5 +231,4 @@ class Event<R(Args...)> {
         Invoke(args...);
     }
 };
-
-#endif  // __EVENT_H__
+#endif // __EVENT_H__

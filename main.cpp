@@ -1,7 +1,8 @@
 // Test program for events
 
 #include <iostream>
-#include "../include/Event.hpp"
+
+#include "Event.hpp"
 
 class A {
    public:
@@ -53,7 +54,6 @@ class B {
 
 class D : public B {
    public:
-
     D(const char* name, A& a) : B(name, a) {
         // std::cout << "B was created\n";
         health = 10;
@@ -77,7 +77,6 @@ class D : public B {
 
 class C : public D {
    public:
-
     C(const char* name, A& a) : D(name, a) {
         // std::cout << "C was created\n";
         //a.event.Subscribe("SayHi", SayHi, this);
@@ -102,16 +101,14 @@ void FreeEvent() {
     std::cout << "This is a free function\n";
 }
 
-
-
 int main() {
     A a{"Juan"};
-    //A a2{"mike"};
+    A a2{"mike"};
     B b{"Mike", a};
     C c{"Sara", a};
     B b2{"Mario", a};
     C c2{"Jules", a};
-    //a.event.RemoveListener(&c);
+    a.event.RemoveListener(&c);
     a.event2(1);
     a.event2(3);
     a.event.Subscribe("FreeEvent", FreeEvent);
