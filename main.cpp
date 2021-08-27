@@ -101,6 +101,17 @@ void FreeEvent() {
     std::cout << "This is a free function\n";
 }
 
+class ConstC {
+public:
+    void Const() const {
+        std::cout << "Const func\n";
+    }
+
+    void F() {
+        std::cout << "Funct\n";
+    }
+};
+
 int main() {
     A a{"Juan"};
     A a2{"mike"};
@@ -111,9 +122,17 @@ int main() {
     a.event.RemoveListener(&c);
     a.event2(1);
     a.event2(3);
-    a.event.Subscribe("FreeEvent", FreeEvent);
-    a.event.Subscribe("FreeEvent", FreeEvent);
+    a.event.Subscribe("FreeEvent", &FreeEvent);
+    a.event.Subscribe("FreeEvent", &FreeEvent);
     //a.event.Unsubscribe("FreeEvent");
-    a.event();
-    return 0;
+    a.event.Subscribe("Lambda", []() { std::cout << "This is a lambda\n"; });
+    
+    auto lambda = []() { std::cout << "Another lambda\n"; };
+    a.event.Subscribe("Lambda2", lambda);
+
+    // const ConstC conC;
+    // a.event.Subscribe("Const", &ConstC::Const, &c);
+    // a.event.Subscribe("F", &ConstC::F, &c);
+
+    a.event(); 
 }

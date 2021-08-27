@@ -121,7 +121,7 @@ class Event<R(Args...)> {
      * @param invoker The instance owning the member function
      */
     template <class Invoker, class Type>
-    void Subscribe(const char* id, R (Type::*func)(Args... args) const, Invoker* invoker) {
+    void Subscribe(const std::string& id, R (Type::*func)(Args... args) const, Invoker* invoker) {
         Delegate deleg {std::move(EasyBind(func, invoker))};
 
         auto found{listeners.find(invoker)};
@@ -175,15 +175,15 @@ class Event<R(Args...)> {
      */
     template <class Invoker>
     void Unsubscribe(const std::string& id, Invoker* invoker) {
-        try {
+        // try {
 #ifdef EVENT_DEBUG_INFO
-            std::cout << "Removing " << id << "...\n";
-#endif
-            EventHandler<R(Args...)>& listener{listeners.at(invoker)};
-            listener.Remove(id);
-        } catch (std::exception ex) {
-            std::cout << "Exception Unsubscribing " << id << ": " << ex.what() << '\n';
-        }
+        std::cout << "Removing " << id << "...\n";
+#endif     
+        EventHandler<R(Args...)>& listener{listeners.at(invoker)};
+        listener.Remove(id);
+        // } catch (std::exception ex) {
+        //     std::cout << "Exception Unsubscribing " << id << ": " << ex.what() << '\n';
+        // }
     }
 
     /**
@@ -191,7 +191,7 @@ class Event<R(Args...)> {
      * 
      * @param id Unique identifier of the subscribed function
      */
-    void Unsubscribe(const char* id) {
+    void Unsubscribe(const std::string& id) {
 #ifdef EVENT_DEBUG_INFO
         std::cout << "Free listener removed [" << id << "]\n";
 #endif

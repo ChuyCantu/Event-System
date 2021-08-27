@@ -1,5 +1,5 @@
 # Event-System
-Simple event system (observer pattern) for C++.
+Simple event system (observer pattern) for C++ with support for "free" functions, member functions and lambdas.
 
 # Usage
 You can declare an Event with a similar syntax as an std::function.
@@ -37,4 +37,5 @@ int main() {
 // This is a member function - 7
 // This is a free function - 7
 ```
-**NOTE:** This system currently only supports *void* as return type since the need to have to return something with events is very small, yet the user still have to type *void* so the user can extend the system to allow return types if they wish (and to keep its syntax similar as a std::function). This system is also not thread safe since I use it mainly in games with no multi threated events.
+**NOTE:** This system currently only supports *void* as return type. This system is also not thread safe since I use it mainly in games with no multi threated events. 
+(Subscription to member functions on instances marked as const is not currently supported)
