@@ -145,9 +145,34 @@ class Event<R(Args...)> {
      * @param id Unique identifier of the subscribing function
      * @param func The function to call when the event is raised
      */
-    void Subscribe(const std::string& id, R(*func)(Args... args)) {
-        Delegate deleg{func};
+//     void Subscribe(const std::string& id, R(*func)(Args... args)) {
+//         Delegate deleg{func};
 
+//         auto found{freeListeners.find(id)};
+
+//         // assert(found == freeListeners.end()
+//         //     && "Free listener already registered.");
+
+//         if (found == freeListeners.end()) {
+// #ifdef EVENT_DEBUG_INFO
+//             std::cout << "New free listener [" << id << "] added.\n";
+// #endif
+//             freeListeners.emplace(id, deleg);
+//         }
+// #ifdef EVENT_DEBUG_INFO
+//         else {
+//             std::cout << "Free listener [" << id << "] already registered.\n";
+//         }
+// #endif
+//     }
+
+    /**
+     * @brief Subscribes free function, lambda or capture lambda to be called by an event
+     * 
+     * @param id Unique identifier of the subscribing function
+     * @param func The function to call when the event is raised
+     */
+    void Subscribe(const std::string& id, std::function<R(Args...)>&& func) {
         auto found{freeListeners.find(id)};
 
         // assert(found == freeListeners.end()
@@ -157,7 +182,32 @@ class Event<R(Args...)> {
 #ifdef EVENT_DEBUG_INFO
             std::cout << "New free listener [" << id << "] added.\n";
 #endif
-            freeListeners.emplace(id, deleg);
+            freeListeners.emplace(id, std::move(func));
+        }
+#ifdef EVENT_DEBUG_INFO
+        else {
+            std::cout << "Free listener [" << id << "] already registered.\n";
+        }
+#endif
+    }
+
+    /**
+     * @brief Subscribes a free function or a std::function reference to be called by an event
+     * 
+     * @param id Unique identifier of the subscribing function
+     * @param func The function to call when the event is raised
+     */
+    void Subscribe(const std::string& id, std::function<R(Args...)>& func) {
+        auto found{freeListeners.find(id)};
+
+        // assert(found == freeListeners.end()
+        //     && "Free listener already registered.");
+
+        if (found == freeListeners.end()) {
+#ifdef EVENT_DEBUG_INFO
+            std::cout << "New free listener [" << id << "] added.\n";
+#endif
+            freeListeners.emplace(id, func);
         }
 #ifdef EVENT_DEBUG_INFO
         else {
@@ -175,15 +225,17 @@ class Event<R(Args...)> {
      */
     template <class Invoker>
     void Unsubscribe(const std::string& id, Invoker* invoker) {
-        // try {
 #ifdef EVENT_DEBUG_INFO
+        try {
         std::cout << "Removing " << id << "...\n";
 #endif     
         EventHandler<R(Args...)>& listener{listeners.at(invoker)};
         listener.Remove(id);
-        // } catch (std::exception ex) {
-        //     std::cout << "Exception Unsubscribing " << id << ": " << ex.what() << '\n';
-        // }
+#ifdef EVENT_DEBUG_INFO
+        } catch (std::exception ex) {
+            std::cout << "Exception Unsubscribing " << id << ": " << ex.what() << '\n';
+        }
+#endif
     }
 
     /**
@@ -208,6 +260,8 @@ class Event<R(Args...)> {
         listeners.erase(invoker);
     }
 
+
+    // TODO: Check if args should be lvalues or not. 
     /**
      * @brief Calls all subscribed functions 
      * 
@@ -215,10 +269,10 @@ class Event<R(Args...)> {
      */
     void Invoke(Args... args) {
         for (auto i{listeners.begin()}; i != listeners.end(); ++i) {
-            (*i).second.CallAll(args...);
+            (*i).second.CallAll(std::forward<decltype(args)>(args)...);
         }
         for (auto i{freeListeners.begin()}; i != freeListeners.end(); ++i) {
-            (*i).second(args...);
+            (*i).second(std::forward<decltype(args)>(args)...);
         }
     }
 
@@ -228,7 +282,7 @@ class Event<R(Args...)> {
      * @param args 
      */
     void operator()(Args... args) {
-        Invoke(args...);
+        Invoke(std::forward<decltype(args)>(args)...);
     }
 };
 #endif // __EVENT_H__

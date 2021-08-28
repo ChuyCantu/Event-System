@@ -37,6 +37,12 @@ class B {
         a.event.Subscribe("SayHi", SayHi, this);
         a.event2.Subscribe("TakeDamage", TakeDamage, this);
         //a.event.Unsubscribe("SayHi", this);
+
+        a.event.Subscribe("Capture", [this]() { 
+            int prevHealth = this->health;
+            this->health = 100;
+            std::cout << "Lambda capture changed health from " << prevHealth << " to " << health << '\n';
+        });
     }
 
     ~B() {
@@ -133,6 +139,8 @@ int main() {
     // const ConstC conC;
     // a.event.Subscribe("Const", &ConstC::Const, &c);
     // a.event.Subscribe("F", &ConstC::F, &c);
+    std::function<void()> function {FreeEvent};
+    a.event.Subscribe("Function", function);
 
     a.event(); 
 }

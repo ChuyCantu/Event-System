@@ -38,4 +38,4 @@ int main() {
 // This is a free function - 7
 ```
 **NOTE:** This system currently only supports *void* as return type. This system is also not thread safe since I use it mainly in games with no multi threated events. 
-(Subscription to member functions on instances marked as const and lambdas with captures are not currently supported)
+(Subscription to member functions on instances marked as const not currently supported)
