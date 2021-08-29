@@ -3,7 +3,9 @@ Simple event system (observer pattern) for C++ with support for "free" functions
 
 # Usage
 You can declare an Event with a similar syntax as an std::function.
-You can also define **EVENT_DEBUG_INFO** to debug in console when a subscriber is being created, removed, updated, or ignored in case one with the same id and same instance (for member functions) is already subscribed to the event.
+You can also define **EVENT_DEBUG_INFO** to debug in console when a subscriber is being created, removed, updated, or ignored in case one with the same id and same instance (for member functions) is already subscribed to the event. This information is printed in the format **[functionID, \<owner>\*]**. For a version without the bloated code to print debug info use the header file inside the folder "No debug info".
+<div style="text-align: right"><sub>*Only when the function is a member of a class.</sub> </div>
+
 ```cpp
 class Foo {
     public:
@@ -37,5 +39,5 @@ int main() {
 // This is a member function - 7
 // This is a free function - 7
 ```
+
 **NOTE:** This system currently only supports *void* as return type. This system is also not thread safe since I use it mainly in games with no multi threated events. 
-(Subscription to member functions on instances marked as const not currently supported)

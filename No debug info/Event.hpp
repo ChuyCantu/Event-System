@@ -1,46 +1,11 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
-#define EVENT_DEBUG_INFO
-
 #include <functional>
 #include <string>
 #include <unordered_map>
-#ifdef EVENT_DEBUG_INFO
-#include <iostream>
-#include <string_view>
 
-// Credits to this function: https://stackoverflow.com/a/56766138/576911
-// from thread https://stackoverflow.com/questions/81870/is-it-possible-to-print-a-variables-type-in-standard-c
-template <typename T>
-#if (__cplusplus == 201703L) // C++17
-constexpr auto type_name() {
-    std::string_view name, prefix, suffix;
-#ifdef __clang__
-    name = __PRETTY_FUNCTION__;
-    prefix = "auto type_name() [T = ";
-    suffix = "]";
-#elif defined(__GNUC__)
-    name = __PRETTY_FUNCTION__;
-    prefix = "constexpr auto type_name() [with T = ";
-    suffix = "]";
-#elif defined(_MSC_VER)
-    name = __FUNCSIG__;
-    prefix = "auto __cdecl type_name<";
-    suffix = ">(void)";
-#endif
-    name.remove_prefix(prefix.size());
-    name.remove_suffix(suffix.size());
-    return name;
-#else // C++17
-const char* type_name() {
-    typedef typename std::remove_reference<T>::type TR;
-    return typeid(TR).name();
-#endif // C++17
-}
-#endif
-
-//* Utility functions to create std::functions without std::placeholder_1 , ...
+//* Utility functions to create std::functions without std::placeholder
 template<class Type, class R, class... Args>
 std::function<R(Args...)> EasyBind(R(Type::*func)(Args... args), Type* invoker) {
     return [=](auto&&... args) {
@@ -91,26 +56,14 @@ public:
         auto found{listeners.find(invoker)}; 
 
         if (found != listeners.end()) {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "Listener [" << id << ", " << type_name<Type>() << "] updated.";
-#endif
             auto iter {found->second.find(id)};
             if (iter != found->second.end()) {
                 iter->second = std::move(deleg);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << " *Function was replaced.\n";
-#endif
             }
             else { 
                 found->second.emplace(id, std::move(deleg));
-#ifdef EVENT_DEBUG_INFO
-                std::cout << '\n';
-#endif
             }
         } else {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "New listener [" << id << ", " << type_name<Type>() << "] registered.\n";
-#endif
             listeners.emplace(invoker, FuncMap{{id, {std::move(deleg)}}});
         }
     }
@@ -131,26 +84,14 @@ public:
         auto found{constListeners.find(invoker)};
 
         if (found != constListeners.end()) {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "Listener [" << id << ", " << type_name<Type>() << "] updated.";
-#endif
             auto iter {found->second.find(id)};
             if (iter != found->second.end()) {
                 iter->second = std::move(deleg);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << " *Function was replaced.\n";
-#endif
             }
             else {
                 found->second.emplace(id, std::move(deleg));
-#ifdef EVENT_DEBUG_INFO
-                std::cout << '\n';
-#endif
             }
         } else {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "New listener [" << id << ", const " << type_name<Type>() << "] registered.\n";
-#endif
             constListeners.emplace(invoker, FuncMap{{id, {std::move(deleg)}}});
         }
     }
@@ -168,21 +109,12 @@ public:
             auto iter {found->second.find(id)};
             if (iter != found->second.end()) {
                 iter->second = std::move(func);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Free listener [" << id << "] updated. Function replaced.\n";
-#endif
             }
             else {    
                 found->second.emplace(id, func);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Free listener [" << id << "] registered.\n";
-#endif
             }
         }
         else {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "Free listener [" << id << "] registered.\n";
-#endif
             listeners.emplace(nullptr, FuncMap{{id, {std::move(func)}}});
         }
     }
@@ -200,20 +132,11 @@ public:
             auto iter{found->second.find(id)};
             if (iter != found->second.end()) {
                 iter->second = func;
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Free listener [" << id << "] updated. Function replaced.\n";
-#endif
             }
             else {
                 found->second.emplace(id, func);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Free listener [" << id << "] registered.\n";
-#endif
             }
         } else {
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "Free listener [" << id << "] registered.\n";
-#endif
             listeners.emplace(nullptr, FuncMap{{id, {func}}});
         }
     }
@@ -233,16 +156,8 @@ public:
             auto iter {found->second.find(id)};
             if (iter != found->second.end()) {
                 found->second.erase(iter);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Listener [" << id << ", " << type_name<decltype(invoker)>() << "] removed.\n";
-#endif
             }
         }
-#ifdef EVENT_DEBUG_INFO
-        else {
-            std::cout << "No member function [" << id << ", " << type_name<decltype(invoker)>() << "] was found.\n";
-        }
-#endif
     }
 
     /**
@@ -260,16 +175,8 @@ public:
             auto iter{found->second.find(id)};
             if (iter != found->second.end()) {
                 found->second.erase(iter);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Listener [" << id << ", " << type_name<decltype(invoker)>() << "] removed.\n";
-#endif
             }
         }
-#ifdef EVENT_DEBUG_INFO
-        else {
-            std::cout << "No member function [" << id << ", " << type_name<decltype(invoker)>() << "] was found.\n";
-        }
-#endif
     }
 
         /**
@@ -284,16 +191,8 @@ public:
             auto iter{found->second.find(id)};
             if (iter != found->second.end()) {
                 found->second.erase(iter);
-#ifdef EVENT_DEBUG_INFO
-                std::cout << "Free listener [" << id << "] removed.\n";
-#endif
             }
         }
-#ifdef EVENT_DEBUG_INFO
-        else {
-            std::cout << "No free function [" << id << "] was found.\n";
-        }
-#endif
     }
 
     /**
@@ -306,9 +205,6 @@ public:
         auto found {listeners.find(invoker)};
         if (found != listeners.end()) {
             listeners.erase(found);
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "All member functions from an instance of type <" << type_name<decltype(invoker)>() << "> were removed.\n";
-#endif
         }
     }
 
@@ -322,9 +218,6 @@ public:
         auto found{constListeners.find(invoker)};
         if (found != constListeners.end()) {
             constListeners.erase(found);
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "All member functions from an instance of type <" << type_name<decltype(invoker)>() << "> were removed.\n";
-#endif
         }
     }
 
@@ -335,9 +228,6 @@ public:
         auto found{listeners.find(nullptr)};
         if (found != listeners.end()) {
             listeners.erase(found);
-#ifdef EVENT_DEBUG_INFO
-            std::cout << "All free functions were removed.\n";
-#endif
         }
     }
 
@@ -348,9 +238,6 @@ public:
      * @param args 
      */
     void Invoke(Args... args) {
-#ifdef EVENT_DEBUG_INFO
-        std::cout << "\n>> Calling all listeners...\n\n";
-#endif
         for (auto& listener : listeners) {
             for (auto& func : listener.second) {
                 func.second(std::forward<decltype(args)>(args)...);

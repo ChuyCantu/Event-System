@@ -1,8 +1,11 @@
-// Test program for events
+// Test program for Events
+
+#define EVENT_DEBUG_INFO
 
 #include <iostream>
 
 #include "Event.hpp"
+// #include "No debug info/Event.hpp"
 
 class A {
    public:
@@ -30,6 +33,7 @@ class B {
     std::string name;
     int health;
     A& a;
+    int x;
 
     B(const char* name, A& a) : name{name}, a{a} {
         // std::cout << "B was created\n";
@@ -42,6 +46,14 @@ class B {
             int prevHealth = this->health;
             this->health = 100;
             std::cout << "Lambda capture changed health from " << prevHealth << " to " << health << '\n';
+        });
+    }
+
+    B(Event<void(int)>& e, A& a) : a{a}, x{15} {
+        e.Subscribe("CaptureLambda", [this](int x) {
+            std::cout << "Prev x = " << this->x << '\n';
+            this->x = x;
+            std::cout << "New x = " << this->x << '\n';
         });
     }
 
@@ -71,7 +83,7 @@ class D : public B {
     ~D() {
     }
 
-    virtual void SayHi() {
+    void SayHi() override {
         std::cout << "D: " << name << " say hi\n";
     }
 
@@ -107,6 +119,10 @@ void FreeEvent() {
     std::cout << "This is a free function\n";
 }
 
+void FreeEvent2() {
+    std::cout << "This is a free function2\n";
+}
+
 class ConstC {
 public:
     void Const() const {
@@ -126,21 +142,33 @@ int main() {
     B b2{"Mario", a};
     C c2{"Jules", a};
     a.event.RemoveListener(&c);
-    a.event2(1);
-    a.event2(3);
     a.event.Subscribe("FreeEvent", &FreeEvent);
-    a.event.Subscribe("FreeEvent", &FreeEvent);
-    //a.event.Unsubscribe("FreeEvent");
+    a.event.Subscribe("FreeEvent", &FreeEvent2);
+    a.event.Unsubscribe("FreeEvent");
     a.event.Subscribe("Lambda", []() { std::cout << "This is a lambda\n"; });
     
     auto lambda = []() { std::cout << "Another lambda\n"; };
     a.event.Subscribe("Lambda2", lambda);
+    a.event.Unsubscribe("Lambda");
 
-    // const ConstC conC;
-    // a.event.Subscribe("Const", &ConstC::Const, &c);
-    // a.event.Subscribe("F", &ConstC::F, &c);
+    a.event.RemoveFreeFunctions();
+
+    const ConstC conC;
+    a.event.Subscribe("Const", &ConstC::Const, &conC);
+    //a.event.Subscribe("F", &ConstC::F, &conC);
+    // a.event.Unsubscribe("Const", &conC);
+
     std::function<void()> function {FreeEvent};
     a.event.Subscribe("Function", function);
 
-    a.event(); 
+    //a.event.RemoveListener(&b);
+    //a.event.RemoveListener(&conC);
+    
+    a.event();
+    a.event2(1);
+    a.event2(3);
+
+    Event<void(int)> otherEvent;
+    B(otherEvent, a);
+    otherEvent.Invoke(50);
 }
