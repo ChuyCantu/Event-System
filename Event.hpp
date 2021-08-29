@@ -1,7 +1,7 @@
 #ifndef __EVENT_H__
 #define __EVENT_H__
 
-#define EVENT_DEBUG_INFO
+// #define EVENT_DEBUG_INFO
 
 #include <functional>
 #include <string>
