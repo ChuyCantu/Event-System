@@ -157,6 +157,9 @@ public:
             if (iter != found->second.end()) {
                 found->second.erase(iter);
             }
+            if (found->second.empty()) {
+                listeners.erase(found);
+            }
         }
     }
 
@@ -176,6 +179,9 @@ public:
             if (iter != found->second.end()) {
                 found->second.erase(iter);
             }
+            if (found->second.empty()) {
+                listeners.erase(found);
+            }
         }
     }
 
@@ -191,6 +197,9 @@ public:
             auto iter{found->second.find(id)};
             if (iter != found->second.end()) {
                 found->second.erase(iter);
+            }
+            if (found->second.empty()) {
+                listeners.erase(found);
             }
         }
     }

@@ -237,6 +237,9 @@ public:
                 std::cout << "Listener [" << id << ", " << type_name<decltype(invoker)>() << "] removed.\n";
 #endif
             }
+            if (found->second.empty()) {
+                listeners.erase(found);
+            }
         }
 #ifdef EVENT_DEBUG_INFO
         else {
@@ -264,6 +267,9 @@ public:
                 std::cout << "Listener [" << id << ", " << type_name<decltype(invoker)>() << "] removed.\n";
 #endif
             }
+            if (found->second.empty()) {
+                listeners.erase(found);
+            }
         }
 #ifdef EVENT_DEBUG_INFO
         else {
@@ -287,6 +293,9 @@ public:
 #ifdef EVENT_DEBUG_INFO
                 std::cout << "Free listener [" << id << "] removed.\n";
 #endif
+            }
+            if (found->second.empty()) {
+                listeners.erase(found);
             }
         }
 #ifdef EVENT_DEBUG_INFO
